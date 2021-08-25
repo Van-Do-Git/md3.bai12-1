@@ -13,22 +13,22 @@
     <title>User Management Application</title>
 </head>
 <body>
-    <h1>User Management</h1>
-    <h2>
-        <a href="/users">Home</a>
-    </h2>
-    <h2>
-        <a href="/users?action=create">Add New User</a>
-    </h2>
-    <h2>
-        <a href="/users?action=sort">Sort by name</a>
-    </h2>
-    <form method="post" action="/users?action=search">
-        <fieldset>
-            <input name="country" width="200px" placeholder="Viet Nam">
-            <button type="submit" >search </button>
-        </fieldset>
-    </form>
+<h1>User Management</h1>
+<h2>
+    <a href="/users">Home</a>
+</h2>
+<h2>
+    <a href="/users?action=create">Add New User</a>
+</h2>
+<h2>
+    <a href="/users?action=sort">Sort by name</a>
+</h2>
+<form method="post" action="/users">
+    <fieldset>
+        <input name="country" width="200px" placeholder="Viet Nam">
+        <input type="submit" name="action" value="search"/>
+    </fieldset>
+</form>
 <div align="center">
     <table border="1" cellpadding="5">
         <caption><h2>List of Users</h2></caption>
