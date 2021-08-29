@@ -154,14 +154,14 @@ public class UserDAO implements IUserDAO {
         try (
                 Connection connection = getConnection();
                 CallableStatement callableStatement = connection.prepareCall("{call selectAllUser()}")
-        ){
+        ) {
             ResultSet resultSet = callableStatement.executeQuery();
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 String email = resultSet.getString("email");
                 String country = resultSet.getString("country");
-                users.add(new User(id,name,email,country));
+                users.add(new User(id, name, email, country));
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -227,58 +227,89 @@ public class UserDAO implements IUserDAO {
         }
     }
 
+//    @Override
+//    public void addUserTransaction(User user, int[] permisions) {
+//        Connection conn = null;
+//        // for insert a new user
+//        PreparedStatement pstmt = null;
+//        // for assign permision to user
+//        PreparedStatement pstmtAssignment = null;
+//        // for getting user id
+//        ResultSet rs = null;
+//        try {
+//            conn = getConnection();
+//            conn.setAutoCommit(false);
+//            pstmt = conn.prepareStatement(INSERT_USERS_SQL, Statement.RETURN_GENERATED_KEYS);
+//            pstmt.setString(1, user.getName());
+//            pstmt.setString(2, user.getEmail());
+//            pstmt.setString(3, user.getCountry());
+//            int rowAffected = pstmt.executeUpdate();
+//            rs = pstmt.getGeneratedKeys();
+//            int userId = 0;
+//            if (rs.next())
+//                userId = rs.getInt(1);
+//            if (rowAffected == 1) {
+//                String sqlPivot = "INSERT INTO user_permision(user_id,permision_id) "
+//                        + "VALUES(?,?)";
+//                pstmtAssignment = conn.prepareStatement(sqlPivot);
+//                for (int permisionId : permisions) {
+//                    pstmtAssignment.setInt(1, userId);
+//                    pstmtAssignment.setInt(2, permisionId);
+//                    pstmtAssignment.executeUpdate();
+//                }
+//                conn.commit();
+//            } else {
+//                conn.rollback();
+//            }
+//        } catch (SQLException ex) {
+//            // roll back the transaction
+//            try {
+//                if (conn != null)
+//                    conn.rollback();
+//            } catch (SQLException e) {
+//                System.out.println(e.getMessage());
+//            }
+//            System.out.println(ex.getMessage());
+//        } finally {
+//            try {
+//                if (rs != null) rs.close();
+//                if (pstmt != null) pstmt.close();
+//                if (pstmtAssignment != null) pstmtAssignment.close();
+//                if (conn != null) conn.close();
+//            } catch (SQLException e) {
+//                System.out.println(e.getMessage());
+//            }
+//        }
+//    }
+
     @Override
     public void addUserTransaction(User user, int[] permisions) {
-        Connection conn = null;
-        // for insert a new user
-        PreparedStatement pstmt = null;
-        // for assign permision to user
-        PreparedStatement pstmtAssignment = null;
-        // for getting user id
-        ResultSet rs = null;
-        try {
-            conn = getConnection();
-            conn.setAutoCommit(false);
-            pstmt = conn.prepareStatement(INSERT_USERS_SQL, Statement.RETURN_GENERATED_KEYS);
-            pstmt.setString(1, user.getName());
-            pstmt.setString(2, user.getEmail());
-            pstmt.setString(3, user.getCountry());
-            int rowAffected = pstmt.executeUpdate();
-            rs = pstmt.getGeneratedKeys();
-            int userId = 0;
-            if (rs.next())
-                userId = rs.getInt(1);
-            if (rowAffected == 1) {
-                String sqlPivot = "INSERT INTO user_permision(user_id,permision_id) "
-                        + "VALUES(?,?)";
-                pstmtAssignment = conn.prepareStatement(sqlPivot);
-                for (int permisionId : permisions) {
-                    pstmtAssignment.setInt(1, userId);
-                    pstmtAssignment.setInt(2, permisionId);
-                    pstmtAssignment.executeUpdate();
+        try (
+                Connection connection = getConnection();
+                PreparedStatement addUser = connection.prepareStatement(INSERT_USERS_SQL, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement addPermision = connection.prepareStatement("INSERT INTO user_permision(user_id,permision_id) VALUES(?,?)");
+
+        ) {
+            connection.setAutoCommit(false);
+            addUser.setString(1, user.getName());
+            addUser.setString(2, user.getEmail());
+            addUser.setString(3, user.getCountry());
+            int checkAdd = addUser.executeUpdate();
+            ResultSet resultSet = addUser.getGeneratedKeys();
+            if (checkAdd == 1&&resultSet.next()) {
+                int idUser = resultSet.getInt(1);
+                for (int Permision : permisions) {
+                    addPermision.setInt(1, idUser);
+                    addPermision.setInt(2, Permision);
+                    addPermision.executeUpdate();
                 }
-                conn.commit();
+                resultSet.close();
+                connection.commit();
             } else {
-                conn.rollback();
+                connection.rollback();
             }
-        } catch (SQLException ex) {
-            // roll back the transaction
-            try {
-                if (conn != null)
-                    conn.rollback();
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
-            System.out.println(ex.getMessage());
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (pstmtAssignment != null) pstmtAssignment.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 
